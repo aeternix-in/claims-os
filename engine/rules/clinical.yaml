@@ -1,0 +1,88 @@
+# Clinical fit: does the record justify the bill? Written and owned by Aeternix clinicians.
+# STATUS: DRAFT, written by engineering as a starting point. Each rule must be reviewed and
+# signed off by the clinical team before it is used with a hospital.
+version: 2026.11.0-draft
+reviewed_by: null
+
+# procedure_id -> evidence the payer's doctor will look for
+procedures:
+  lapchole:
+    name: Laparoscopic cholecystectomy
+    expected_los_days: 2
+    surgical: true
+    evidence:
+      - id: usg_gallstones
+        label: Ultrasound abdomen showing gallstones / cholecystitis
+        any_keywords: [cholelithiasis, gallstone, calculus, calculi, cholecystitis]
+        in_types: [investigation]
+  appendix:
+    name: Appendicectomy
+    expected_los_days: 2
+    surgical: true
+    evidence:
+      - id: imaging_appendicitis
+        label: USG or CT consistent with appendicitis
+        any_keywords: [appendicitis, inflamed appendix, appendicular, non-compressible appendix]
+        in_types: [investigation]
+      - id: wbc
+        label: Blood count (WBC / TLC)
+        any_keywords: [wbc, tlc, total leucocyte, total leukocyte]
+        in_types: [investigation]
+  cataract:
+    name: Cataract surgery
+    expected_los_days: 1
+    surgical: true
+    implants: true
+    evidence:
+      - id: biometry
+        label: Biometry / A-scan with IOL power
+        any_keywords: [biometry, a-scan, a scan, iol power, axial length]
+        in_types: [investigation]
+      - id: visual_acuity
+        label: Visual acuity recorded
+        any_keywords: [visual acuity, 6/60, 6/36, 6/24, 6/18, 6/12, bcva]
+        in_types: [admission_note, investigation, discharge_summary]
+  tkr:
+    name: Total knee replacement
+    expected_los_days: 4
+    surgical: true
+    implants: true
+    evidence:
+      - id: xray_knee
+        label: X-ray knee showing joint-space loss / osteoarthritis
+        any_keywords: [osteoarthritis, joint space, kellgren, oa knee]
+        in_types: [investigation]
+      - id: failed_conservative
+        label: Failed conservative treatment documented
+        any_keywords: [conservative, physiotherapy, analgesic, nsaid]
+        in_types: [admission_note, discharge_summary]
+  ptca:
+    name: Coronary angioplasty
+    expected_los_days: 3
+    surgical: true
+    implants: true
+    evidence:
+      - id: angiography
+        label: Coronary angiography report showing significant stenosis
+        any_keywords: [stenosis, occlusion, angiography, cag]
+        in_types: [investigation]
+      - id: ecg_troponin
+        label: ECG or troponin
+        any_keywords: [ecg, troponin, st elevation, st depression]
+        in_types: [investigation, admission_note]
+  lscs:
+    name: Caesarean section
+    expected_los_days: 3
+    surgical: true
+    evidence:
+      - id: lscs_indication
+        label: Indication for caesarean recorded
+        any_keywords: [indication, fetal distress, cpd, breech, previous lscs, failed induction, non-progress]
+        in_types: [admission_note, discharge_summary, ot_notes]
+
+# rules that apply to every case
+general:
+  icu_needs_chart:
+    label: ICU days billed need daily ICU notes / vitals chart
+    source: Payer medical-necessity review practice; IRDAI non-payable list does not cover this. Clinical team to confirm.
+  los_tolerance_days: 2

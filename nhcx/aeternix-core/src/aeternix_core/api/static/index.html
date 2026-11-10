@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aeternix · Insurance desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- Loaded without blocking the page: works offline with the system font fallback -->
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+  :root {
+    --ink: #12343B;
+    --ink-2: #4A6268;
+    --paper: #F3F6F5;
+    --surface: #FFFFFF;
+    --line: #D5DEDC;
+    --teal: #0F766E;
+    --teal-soft: #E3F1EF;
+    --ok: #1F7A4D;    --ok-bg: #E4F3EA;
+    --wait: #9A6212;  --wait-bg: #FBF0DC;
+    --bad: #B42318;   --bad-bg: #FBE7E5;
+    --ask: #5B3CC4;   --ask-bg: #EEE9FB;
+    --idle: #475467;  --idle-bg: #EDEFF2;
+    --radius-s: 6px;
+    --radius-m: 10px;
+    font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-feature-settings: "tnum" 1;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-size: 15px; line-height: 1.5; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  header.bar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 24px; background: var(--ink); color: #fff;
+  }
+  header.bar h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  header.bar .who { color: #A9C3C0; font-size: 14px; }
+  header.bar .spacer { flex: 1; }
+  header.bar .btn { white-space: nowrap; }
+  @media (max-width: 520px) { header.bar .who { display: none; } }
+
+  .btn {
+    border: 1px solid transparent; border-radius: var(--radius-s); padding: 8px 14px;
+    font-weight: 600; cursor: pointer; background: var(--teal); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: progress; }
+  .btn.quiet { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn.on-dark { background: #fff; color: var(--ink); }
+
+  main { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); min-height: calc(100vh - 56px); }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  /* queue */
+  .queue { border-right: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; }
+  .filters { display: flex; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+    padding: 4px 12px; font-size: 14px; cursor: pointer; color: var(--ink-2);
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip .n { opacity: .7; margin-left: 4px; }
+  ul.cases { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+  ul.cases li button {
+    all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+  }
+  ul.cases li button:hover { background: var(--paper); }
+  ul.cases li button[aria-current="true"] { background: var(--teal-soft); box-shadow: inset 3px 0 0 var(--teal); }
+  ul.cases li button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+  .c-name { font-weight: 600; }
+  .c-amt { text-align: right; font-weight: 600; }
+  .c-meta { color: var(--ink-2); font-size: 13px; }
+  .empty { padding: 32px 20px; color: var(--ink-2); }
+
+  ul.cases .status { align-self: start; justify-self: end; }
+  .status { display: inline-block; font-size: 13px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .t-ok { color: var(--ok); background: var(--ok-bg); }
+  .t-wait { color: var(--wait); background: var(--wait-bg); }
+  .t-bad { color: var(--bad); background: var(--bad-bg); }
+  .t-ask { color: var(--ask); background: var(--ask-bg); }
+  .t-idle { color: var(--idle); background: var(--idle-bg); }
+
+  /* detail */
+  .detail { padding: 28px 32px 48px; max-width: 920px; min-width: 0; }
+  .detail h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 2px; }
+  .detail .sub { color: var(--ink-2); margin: 0 0 24px; }
+
+  /* the journey track: the one bold element */
+  .track { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 0 28px; padding: 0; list-style: none; }
+  .track li { position: relative; padding-top: 30px; font-size: 14px; }
+  .track li::before {
+    content: ""; position: absolute; top: 10px; left: 0; right: 0; height: 4px; background: var(--line);
+  }
+  .track li:first-child::before { left: 10px; }
+  .track li:last-child::before { right: calc(100% - 10px); }
+  .track .dot {
+    position: absolute; top: 2px; left: 0; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--surface); border: 4px solid var(--line);
+  }
+  .track .label { font-weight: 600; display: block; }
+  .track .note { color: var(--ink-2); font-size: 13px; }
+  .track li.done::before { background: var(--teal); }
+  .track li.done .dot { border-color: var(--teal); background: var(--teal); }
+  .track li.now .dot { border-color: var(--teal); }
+  .track li.now.waiting .dot { border-color: var(--wait); animation: pulse 1.6s ease-in-out infinite; }
+  .track li.now.stopped .dot { border-color: var(--bad); background: var(--bad); }
+  .track li.now.asked .dot { border-color: var(--ask); background: var(--ask-bg); }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--wait-bg); } }
+  @media (prefers-reduced-motion: reduce) { .track li.now.waiting .dot { animation: none; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px 20px; margin-bottom: 16px; }
+  .panel h3 { font-size: 15px; margin: 0 0 10px; }
+  .decision { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 20px; }
+  .kv dt { color: var(--ink-2); font-size: 13px; }
+  .kv dd { margin: 0; font-weight: 600; }
+  .disposition { margin: 12px 0 0; color: var(--ink-2); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .actions .hint { color: var(--ink-2); font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--ink-2); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+  td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  tr:last-child td { border-bottom: 0; }
+  .history td:first-child { color: var(--ink-2); white-space: nowrap; }
+
+  /* form */
+  form.newcase { padding: 28px 32px 64px; max-width: 920px; }
+  form.newcase h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 4px; }
+  fieldset { border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface); padding: 16px 20px 18px; margin: 0 0 16px; }
+  legend { font-weight: 600; padding: 0 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 16px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--ink-2); }
+  input, select { border: 1px solid var(--line); border-radius: var(--radius-s); padding: 8px 10px; background: #fff; color: var(--ink); }
+  input:focus { border-color: var(--teal); }
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: grid; gap: 8px; align-items: end; }
+  .row.dx { grid-template-columns: 140px 1fr 36px; }
+  .row.px { grid-template-columns: 160px 1fr 36px; }
+  .row.li { grid-template-columns: 140px 1fr 120px 80px 36px; }
+  @media (max-width: 700px) { .row.li, .row.dx, .row.px { grid-template-columns: 1fr; } }
+  .x { border: 1px solid var(--line); background: #fff; border-radius: var(--radius-s); height: 38px; cursor: pointer; color: var(--ink-2); }
+  .add { margin-top: 10px; }
+  .total { text-align: right; font-weight: 600; margin-top: 10px; }
+  .form-actions { display: flex; gap: 10px; align-items: center; }
+  .errors { background: var(--bad-bg); color: var(--bad); border-radius: var(--radius-m); padding: 12px 16px; margin-bottom: 16px; }
+  .errors ul { margin: 6px 0 0; padding-left: 18px; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 10px 16px; border-radius: var(--radius-s);
+  }
+  .demo-tag { font-size: 13px; color: var(--ink); background: #F6D98B; border-radius: 999px; padding: 2px 10px; font-weight: 600; }
+  .scenario { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); flex-direction: row; }
+  .scenario select { padding: 7px 8px; }
+
+  /* under the hood */
+  .msgs { list-style: none; margin: 0; padding: 0; }
+  .msgs > li { border-top: 1px solid var(--line); }
+  .msgs > li:first-child { border-top: 0; }
+  .msg-head {
+    all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 2px 10px; padding: 10px 0; align-items: start;
+  }
+  .msg-head:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .dir { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  .dir.out { background: var(--teal-soft); color: var(--teal); }
+  .dir.in { background: var(--ask-bg); color: var(--ask); }
+  .msg-title { font-weight: 600; }
+  .msg-path { grid-column: 2; color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
+  .msg-time { color: var(--ink-2); font-size: 13px; text-align: right; }
+  .msg-body { padding: 4px 0 16px 38px; display: grid; gap: 14px; min-width: 0; }
+  .msg-body > div { min-width: 0; }
+  .msg-body h4 { margin: 0 0 6px; font-size: 13px; color: var(--ink-2); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rchip { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 2px 8px; font-size: 13px; }
+  .facts { margin: 8px 0 0; font-size: 14px; }
+  .hdrs td:first-child { color: var(--ink-2); width: 170px; }
+  .hdrs { table-layout: fixed; }
+  .hdrs td { font-size: 13px; overflow-wrap: anywhere; }
+  .wire {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.45;
+    background: var(--ink); color: #CFE3E0; border-radius: var(--radius-s); padding: 10px 12px;
+    white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow: auto; margin: 0;
+  }
+  .wire .seg-h { color: #8FD3C8; } .wire .seg-k { color: #F6D98B; } .wire .seg-c { color: #E8A9A1; }
+  .explain { font-size: 13px; color: var(--ink-2); margin: 6px 0 0; }
+  details.json summary { cursor: pointer; font-size: 14px; color: var(--teal); font-weight: 600; }
+  details.json pre { font-size: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-s);
+                     padding: 10px; max-height: 360px; overflow: auto; margin: 8px 0 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>Aeternix</h1>
+  <span class="who" id="hospitalName">Insurance desk</span>
+  <span class="demo-tag" id="demoTag" hidden>Demo mode</span>
+  <span class="spacer"></span>
+  <a class="btn quiet" href="/ui/abha" style="color:#fff;border-color:#4A6A70;text-decoration:none">ABHA desk</a>
+  <button class="btn quiet" id="demoBtn" type="button" hidden style="color:#fff;border-color:#4A6A70">Run a demo case</button>
+  <button class="btn on-dark" id="newBtn" type="button">New case</button>
+</header>
+
+<main>
+  <section class="queue" aria-label="Cases">
+    <div class="filters" role="group" aria-label="Filter cases">
+      <button class="chip" data-filter="all" aria-pressed="true">All<span class="n" id="n-all"></span></button>
+      <button class="chip" data-filter="action" aria-pressed="false">Needs action<span class="n" id="n-action"></span></button>
+      <button class="chip" data-filter="waiting" aria-pressed="false">With insurer<span class="n" id="n-waiting"></span></button>
+      <button class="chip" data-filter="closed" aria-pressed="false">Closed<span class="n" id="n-closed"></span></button>
+    </div>
+    <ul class="cases" id="caseList"></ul>
+  </section>
+
+  <section id="right">
+    <div class="detail" id="placeholder">
+      <h2>Select a case</h2>
+      <p class="sub">Pick a case from the list to see where it stands, or start a new one.</p>
+    </div>
+    <div class="detail" id="detail" hidden></div>
+
+    <form class="newcase" id="form" hidden novalidate>
+      <h2>New case</h2>
+      <p class="sub" style="color:var(--ink-2);margin:0 0 20px">Enter the details from the admission. You can send the pre-auth from the case page after saving.</p>
+      <div class="errors" id="formErrors" hidden></div>
+
+      <fieldset>
+        <legend>Patient</legend>
+        <div class="grid">
+          <label>Full name<input name="patient.name" required></label>
+          <label>Gender<select name="patient.gender"><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option><option value="unknown">Unknown</option></select></label>
+          <label>Date of birth<input type="date" name="patient.birth_date" required></label>
+          <label>Phone<input name="patient.phone" inputmode="tel"></label>
+          <label>ABHA number<input name="patient.abha_number"></label>
+          <label>Aadhaar (optional)<input name="patient.aadhaar_number"></label>
+          <label>Hospital patient ID (UHID)<input name="patient.hospital_patient_id"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Insurance</legend>
+        <div class="grid">
+          <label>Insurer<input name="insurer.name" required></label>
+          <label>Insurer NHCX code<input name="insurer.nhcx_participant_code" placeholder="name@hcx" required></label>
+          <label>Handled by (TPA code, if any)<input name="insurer.processing_code" placeholder="from Get Policy"></label>
+          <label>Product code<input name="policy.product_code" placeholder="from Get Policy" required></label>
+          <label>Policy number<input name="policy.policy_number" required></label>
+          <label>Member ID<input name="policy.member_id" required></label>
+          <label>Relationship to holder<select name="policy.relationship"><option value="self">Self</option><option value="spouse">Spouse</option><option value="child">Child</option><option value="parent">Parent</option><option value="other">Other</option></select></label>
+          <label>Policy valid until<input type="date" name="policy.valid_to"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Admission and treatment</legend>
+        <div class="grid">
+          <label>Hospital case number<input name="hospital_reference"></label>
+          <label>Admission<input type="datetime-local" name="admission_at" required></label>
+          <label>Expected discharge<input type="datetime-local" name="discharge_at" required></label>
+          <label>Treating doctor<input name="doctor.name" required></label>
+          <label>Doctor's registration no.<input name="doctor.registration_number" required></label>
+        </div>
+        <h3 style="font-size:14px;margin:18px 0 8px">Diagnoses (ICD-10)</h3>
+        <div class="rows" id="dxRows"></div>
+        <button class="btn quiet add" type="button" data-add="dx">Add diagnosis</button>
+        <h3 style="font-size:14px;margin:18px 0 8px">Procedures (SNOMED CT)</h3>
+        <div class="rows" id="pxRows"></div>
+        <button class="btn quiet add" type="button" data-add="px">Add procedure</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Estimated bill</legend>
+        <div class="rows" id="liRows"></div>
+        <button class="btn quiet add" type="button" data-add="li">Add line</button>
+        <div class="total" id="billTotal">Total ₹0</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Hospital</legend>
+        <div class="grid">
+          <label>Hospital name<input name="hospital.name" required></label>
+          <label>Hospital NHCX code<input name="hospital.nhcx_participant_code" placeholder="name@hcx" required></label>
+          <label>HFR ID<input name="hospital.hfr_id" required></label>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button class="btn" type="submit" id="saveBtn">Save case</button>
+        <button class="btn quiet" type="button" id="sampleBtn">Fill with sample data</button>
+        <button class="btn quiet" type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const inr = v => "₹" + Number(v || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const when = iso => iso ? new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+
+// status -> what the desk needs to know
+const STATUS = {
+  draft:                       { text: "Draft",                       tone: "idle", group: "action" },
+  preauth_submitted:           { text: "Pre-auth sent",               tone: "wait", group: "waiting" },
+  preauth_approved:            { text: "Pre-auth approved",           tone: "ok",   group: "action" },
+  preauth_partially_approved:  { text: "Pre-auth partly approved",    tone: "ok",   group: "action" },
+  preauth_rejected:            { text: "Pre-auth rejected",           tone: "bad",  group: "closed" },
+  preauth_query:               { text: "Insurer needs more info",     tone: "ask",  group: "action" },
+  preauth_query_answered:      { text: "Reply sent, awaiting decision", tone: "wait", group: "waiting" },
+  preauth_failed:              { text: "Pre-auth not delivered",      tone: "bad",  group: "action" },
+  claim_submitted:             { text: "Claim sent",                  tone: "wait", group: "waiting" },
+  claim_approved:              { text: "Claim approved",              tone: "ok",   group: "waiting" },
+  claim_partially_approved:    { text: "Claim partly approved",       tone: "ok",   group: "waiting" },
+  claim_rejected:              { text: "Claim rejected",              tone: "bad",  group: "closed" },
+  claim_query:                 { text: "Insurer needs more info",     tone: "ask",  group: "action" },
+  claim_query_answered:        { text: "Reply sent, awaiting decision", tone: "wait", group: "waiting" },
+  claim_failed:                { text: "Claim not delivered",         tone: "bad",  group: "action" },
+  paid:                        { text: "Paid",                        tone: "ok",   group: "closed" },
+};
+const st = s => STATUS[s] || { text: s, tone: "idle", group: "all" };
+const badge = s => `<span class="status t-${st(s).tone}">${esc(st(s).text)}</span>`;
+
+let cases = [], filter = "all", selected = null, timer = null;
+let config = { demo_mode: false, envelope_mode: "plain" };
+let lastSig = "", openMsg = null, scenarioChoice = "approve", draftReply = "";
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  let body = null;
+  try { body = await r.json(); } catch { /* not JSON */ }
+  return { ok: r.ok, status: r.status, body };
+}
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 3200);
+}
+
+// ---------- queue ----------
+async function loadCases() {
+  const r = await api("/cases");
+  if (!r.ok) return;
+  cases = r.body;
+  for (const g of ["all", "action", "waiting", "closed"]) {
+    const n = g === "all" ? cases.length : cases.filter(c => st(c.status).group === g).length;
+    $("#n-" + g).textContent = n ? n : "";
+  }
+  renderList();
+}
+
+function renderList() {
+  const list = $("#caseList");
+  const shown = filter === "all" ? cases : cases.filter(c => st(c.status).group === filter);
+  if (!shown.length) {
+    list.innerHTML = `<li class="empty">${cases.length ? "No cases in this view." : "No cases yet. Use “New case” to enter the first admission."}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map(c => `
+    <li><button type="button" data-id="${esc(c.case_id)}" aria-current="${c.case_id === selected}">
+      <span class="c-name">${esc(c.patient)}</span><span class="c-amt">${inr(c.total)}</span>
+      <span class="c-meta">${esc(c.insurer)} · ${esc(c.case_id)}</span>${badge(c.status)}
+    </button></li>`).join("");
+}
+
+$("#caseList").addEventListener("click", e => {
+  const b = e.target.closest("button[data-id]");
+  if (b) openCase(b.dataset.id);
+});
+document.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
+  filter = ch.dataset.filter;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === ch));
+  renderList();
+}));
+
+// ---------- detail ----------
+const STAGES = ["Admitted", "Pre-auth", "Claim", "Paid"];
+
+function trackState(status) {
+  // returns [stageIndex, mood] for the current position
+  if (status === "draft") return [0, "now"];
+  if (status === "paid") return [3, "done"];
+  const [wf, ...rest] = status.split("_");
+  const state = rest.join("_");
+  const idx = wf === "preauth" ? 1 : 2;
+  const mood = { submitted: "waiting", query_answered: "waiting", rejected: "stopped", failed: "stopped",
+                 query: "asked" }[state] || "reached";
+  return [idx, mood];
+}
+
+function renderTrack(status, decision) {
+  const [idx, mood] = trackState(status);
+  return `<ol class="track" aria-label="Case progress">` + STAGES.map((name, i) => {
+    let cls = "", note = "";
+    if (i < idx || (i === idx && (mood === "reached" || mood === "done"))) cls = "done";
+    if (i === idx && mood !== "done") cls += " now " + mood;
+    if (i === idx) note = st(status).text;
+    if (i === 1 && decision?.preauth_ref && idx >= 1) note = note || `Ref ${decision.preauth_ref}`;
+    return `<li class="${cls.trim()}"><span class="dot"></span><span class="label">${name}</span><span class="note">${esc(note)}</span></li>`;
+  }).join("") + `</ol>`;
+}
+
+async function openCase(id) {
+  if (id !== selected) { openMsg = null; lastSig = ""; }
+  selected = id;
+  $("#placeholder").hidden = true; $("#form").hidden = true; $("#detail").hidden = false;
+  renderList();
+  await renderDetail();
+  if (window.matchMedia("(max-width: 860px)").matches) $("#detail").scrollIntoView({ behavior: "smooth" });
+}
+
+async function renderDetail(quiet = false) {
+  if (!selected) return;
+  const r = await api("/cases/" + encodeURIComponent(selected));
+  if (!r.ok) { $("#detail").innerHTML = `<p>Case not found.</p>`; return; }
+  const c = r.body, d = c.data, dec = c.last_decision;
+  const sig = c.status + "|" + c.exchanges.length + "|" + c.exchanges.map(x => x.status).join();
+  if (quiet && sig === lastSig) return;          // nothing changed: keep open panels as they are
+  lastSig = sig;
+  const payable = config.demo_mode && ["claim_approved", "claim_partially_approved"].includes(c.status);
+  const waiting = c.status.endsWith("submitted") || c.status.endsWith("query_answered");
+  const actionLabel = {
+    preauth: c.status === "draft" ? "Send pre-auth" : c.status === "preauth_query" ? "Send revised pre-auth instead" : "Send pre-auth again",
+    claim: "Send claim" };
+
+  $("#detail").innerHTML = `
+    <h2>${esc(d.patient.name)}</h2>
+    <p class="sub">${esc(c.case_id)} · ${esc(d.insurer.name)} · admitted ${when(d.admission_at)}</p>
+    ${renderTrack(c.status, dec)}
+    <div class="actions">
+      ${config.demo_mode && c.actions.length ? `<label class="scenario">Insurer will
+        <select id="scenario">${[["approve", "approve"], ["partial", "approve part"], ["reject", "reject"], ["query", "ask for more info"], ["timeout", "not respond"]]
+          .map(([v, t]) => `<option value="${v}" ${v === scenarioChoice ? "selected" : ""}>${t}</option>`).join("")}</select></label>` : ""}
+      ${c.actions.map(a => `<button class="btn" type="button" data-submit="${a}">${actionLabel[a]}</button>`).join("")}
+      ${payable ? `<button class="btn" type="button" id="payBtn">Simulate insurer payment</button>` : ""}
+      ${waiting ? `<span class="hint">Waiting for the insurer's decision. This page updates on its own.</span>` : ""}
+      ${!c.actions.length && !waiting ? `<span class="hint">${c.status === "paid" ? "Settled. Nothing more to do." : c.status.endsWith("rejected") ? "The insurer rejected this case." : ""}</span>` : ""}
+    </div>
+    ${c.open_query ? `<div class="panel" style="border-color:var(--ask);background:var(--ask-bg)">
+      <h3 style="color:var(--ask)">The insurer needs more information</h3>
+      <p style="margin:0 0 12px">${esc(c.open_query.remarks)}</p>
+      <label>Your reply<textarea id="qMessage" rows="3" style="font:inherit;border:1px solid var(--line);border-radius:var(--radius-s);padding:8px 10px;resize:vertical">${esc(draftReply)}</textarea></label>
+      <label style="margin-top:10px">Attach documents (PDF, JPG, PNG)<input type="file" id="qFiles" multiple accept="application/pdf,image/jpeg,image/png"></label>
+      <div style="margin-top:12px"><button class="btn" type="button" id="qSend">Send reply</button></div>
+    </div>` : ""}
+    ${dec ? `<div class="panel"><h3>Insurer's latest decision</h3>
+      <dl class="decision kv">
+        <div><dt>Decision</dt><dd>${badge(c.status)}</dd></div>
+        <div><dt>Requested</dt><dd>${inr(dec.submitted)}</dd></div>
+        <div><dt>Approved</dt><dd>${dec.eligible != null ? inr(dec.eligible) : "—"}</dd></div>
+        ${dec.preauth_ref ? `<div><dt>Pre-auth reference</dt><dd>${esc(dec.preauth_ref)}</dd></div>` : ""}
+      </dl>${dec.disposition ? `<p class="disposition">${esc(dec.disposition)}</p>` : ""}</div>` : ""}
+    ${c.exchanges.length ? `<div class="panel"><h3>Under the hood: messages with NHCX</h3>
+      <p class="explain" style="margin:-4px 0 10px">Every message Aeternix exchanged with the health claims exchange for this case. Open one to see what was actually sent.</p>
+      <ul class="msgs">${c.exchanges.map(msgRow).join("")}</ul></div>` : ""}
+    <div class="panel"><h3>Estimated bill</h3><table>
+      <thead><tr><th>Service</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${d.line_items.map(li => `<tr><td>${esc(li.description)}</td><td class="num">${li.quantity}</td>
+        <td class="num">${inr(li.unit_price)}</td><td class="num">${inr(li.unit_price * li.quantity)}</td></tr>`).join("")}
+      <tr><td><strong>Total</strong></td><td></td><td></td><td class="num"><strong>${inr(c.total)}</strong></td></tr></tbody></table></div>
+    <div class="panel"><h3>Clinical</h3><table><tbody>
+      ${d.diagnoses.map(x => `<tr><td>Diagnosis</td><td>${esc(x.icd10_code)}</td><td>${esc(x.description)}</td></tr>`).join("")}
+      ${d.procedures.map(x => `<tr><td>Procedure</td><td>${esc(x.snomed_code)}</td><td>${esc(x.description)}</td></tr>`).join("")}
+      <tr><td>Doctor</td><td colspan="2">${esc(d.doctor.name)} (${esc(d.doctor.registration_number)})</td></tr>
+      <tr><td>Policy</td><td colspan="2">${esc(d.policy.policy_number)} · member ${esc(d.policy.member_id)}</td></tr>
+    </tbody></table></div>
+    <div class="panel"><h3>History</h3><table class="history"><tbody>
+      ${c.history.slice().reverse().map(h => `<tr><td>${when(h.at)}</td><td>${badge(h.to)}</td><td>${esc(h.note && !h.note.startsWith("api_call_id") ? h.note : "")}</td></tr>`).join("")}
+    </tbody></table></div>`;
+  if (openMsg) await expandMsg(openMsg, false);
+}
+
+// ---------- under the hood ----------
+const MSG_LABEL = {
+  "outbound:submit:preauth": "Pre-auth sent to the insurer",
+  "outbound:submit:claim": "Claim sent to the insurer",
+  "inbound:on_submit:preauth": "Insurer's pre-auth decision received",
+  "inbound:on_submit:claim": "Insurer's claim decision received",
+  "inbound:request:paymentnotice": "Payment notice received from the insurer",
+  "outbound:on_request:paymentnotice": "Payment acknowledged to the insurer",
+  "inbound:request:communication": "Insurer asked for more information",
+  "outbound:on_request:communication": "Reply sent to the insurer",
+};
+function msgRow(x) {
+  const key = `${x.direction}:${x.action}:${x.workflow}`;
+  const path = `/hcx/v1/${x.workflow}/${x.action}`;
+  const failed = x.status === "failed";
+  return `<li data-msg="${x.id}">
+    <button class="msg-head" type="button" aria-expanded="${openMsg === x.id}" data-open="${x.id}">
+      <span class="dir ${x.direction === "outbound" ? "out" : "in"}" aria-hidden="true">${x.direction === "outbound" ? "↑" : "↓"}</span>
+      <span class="msg-title">${esc(MSG_LABEL[key] || key)}${failed ? ` <span class="status t-bad">not delivered</span>` : ""}</span>
+      <span class="msg-time">${when(x.created_at)}</span>
+      <span class="msg-path">${x.direction === "outbound" ? "Aeternix → NHCX" : "NHCX → Aeternix"} · POST ${esc(path)}</span>
+    </button>
+    <div class="msg-body" id="msg-${x.id}" hidden></div></li>`;
+}
+
+const HDR_LABEL = {
+  "x-hcx-sender_code": "Sender", "x-hcx-recipient_code": "Recipient", "x-hcx-status": "Protocol status",
+  "x-hcx-correlation_id": "Conversation ID", "x-hcx-request_id": "Request ID", "x-hcx-api_call_id": "Message ID",
+  "x-hcx-workflow_id": "Workflow ID", "x-hcx-timestamp": "Timestamp", "x-hcx-ben-abha-id": "Patient ABHA",
+};
+
+function resourceChips(fhir) {
+  const counts = {};
+  for (const e of fhir?.entry || []) { const t = e.resource?.resourceType; if (t) counts[t] = (counts[t] || 0) + 1; }
+  return Object.entries(counts).map(([t, n]) => `<span class="rchip">${esc(t)}${n > 1 ? " ×" + n : ""}</span>`).join("");
+}
+function keyFacts(fhir) {
+  const res = (fhir?.entry || []).map(e => e.resource || {});
+  const claim = res.find(r => r.resourceType === "Claim");
+  const cr = res.find(r => r.resourceType === "ClaimResponse");
+  const pn = res.find(r => r.resourceType === "PaymentNotice");
+  const creq = res.find(r => r.resourceType === "CommunicationRequest");
+  const comm = res.find(r => r.resourceType === "Communication");
+  const task = res.find(r => r.resourceType === "Task");
+  if (creq) return `Insurer asks: <strong>${esc((creq.payload || []).map(p => p.contentString).filter(Boolean).join(" "))}</strong>`;
+  if (comm) {
+    const atts = (comm.payload || []).filter(p => p.contentAttachment).length;
+    return `Reply: <strong>${esc((comm.payload || []).map(p => p.contentString).filter(Boolean).join(" "))}</strong>${atts ? ` · ${atts} attachment${atts > 1 ? "s" : ""}` : ""}`;
+  }
+  if (cr) return `Insurer's answer: <strong>${esc(cr.outcome)}</strong>${cr.disposition ? " · " + esc(cr.disposition) : ""}`;
+  if (pn) return `Payment of <strong>${inr(pn.amount?.value)}</strong> notified`;
+  if (task && !pn) return `Acknowledgement for case <strong>${esc(task.output?.[0]?.valueString || "")}</strong>`;
+  if (claim) return `Claim type <strong>${esc(claim.use)}</strong> for <strong>${inr(claim.total?.value)}</strong>, ${claim.item?.length || 0} bill lines, ${claim.diagnosis?.length || 0} diagnosis`;
+  return "";
+}
+function wireView(m) {
+  const p = m.wire?.payload;
+  if (!m.encrypted) {
+    return `<p class="explain" style="margin:0">Sent as readable JSON (plain mode). With encryption on (JWE mode), this is where the sandbox's encrypted form appears.</p>`;
+  }
+  const [h, k, iv, ct, tag] = p.split(".");
+  const cut = (x, n) => x.length > n ? x.slice(0, n) + "…" : x;
+  return `<pre class="wire"><span class="seg-h">${esc(cut(h, 90))}</span>.<span class="seg-k">${esc(cut(k, 40))}</span>.${esc(cut(iv, 16))}.<span class="seg-c">${esc(cut(ct, 140))}</span>.${esc(tag)}</pre>
+    <p class="explain">Encrypted, ${p.length.toLocaleString("en-IN")} characters (RSA-OAEP-256 / A256GCM, the sandbox's format).
+    <span style="color:var(--teal)">Teal</span>: protocol headers, readable so the exchange can route it.
+    <span style="color:#9A6212">Amber</span>: the content key, locked to the recipient's public key.
+    <span style="color:var(--bad)">Red</span>: the FHIR document itself, unreadable to anyone but the recipient.</p>`;
+}
+
+async function expandMsg(id, toggle = true) {
+  const box = document.getElementById("msg-" + id);
+  const head = document.querySelector(`[data-open="${id}"]`);
+  if (!box) return;
+  if (toggle && !box.hidden) { box.hidden = true; head.setAttribute("aria-expanded", "false"); openMsg = null; return; }
+  const r = await api(`/cases/${encodeURIComponent(selected)}/messages/${id}`);
+  if (!r.ok) return;
+  const m = r.body, plain = m.plain || {}, fhir = plain.fhir || {};
+  const isDecision = !!m.interpretation, outbound = m.direction === "outbound";
+  const ack = m.sync_response;
+  box.innerHTML = `
+    <div><h4>${outbound ? "What Aeternix built from the case" : "What the insurer sent"}</h4>
+      <div class="chips">${resourceChips(fhir) || '<span class="explain">No FHIR content</span>'}</div>
+      <p class="facts">${keyFacts(fhir)}</p></div>
+    ${isDecision ? `<div><h4>How Aeternix read the decision</h4><p class="facts" style="margin:0">
+      ${badge(`${m.workflow}_${m.interpretation.decision === "query" ? "query" : m.interpretation.decision}`)}
+      ${m.interpretation.eligible != null ? ` approved ${inr(m.interpretation.eligible)} of ${inr(m.interpretation.submitted)}` : ""}
+      ${m.interpretation.preauth_ref ? ` · ref ${esc(m.interpretation.preauth_ref)}` : ""}</p></div>` : ""}
+    <div><h4>Protocol headers</h4><table class="hdrs"><tbody>
+      ${Object.entries(plain.headers || {}).map(([k, v]) => `<tr><td>${esc(HDR_LABEL[k] || k)}</td><td>${esc(v)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div><h4>On the wire</h4>${wireView(m)}</div>
+    ${outbound ? `<div><h4>Exchange's immediate reply</h4><p class="facts" style="margin:0">
+      ${m.http_status ? `HTTP ${m.http_status}` : "No reply"}${m.status === "acked" ? " · accepted for delivery" : ""}
+      ${m.error ? ` · <span style="color:var(--bad)">${esc(m.error)}</span>` : ""}</p></div>` : ""}
+    <details class="json"><summary>Show the full FHIR document</summary><pre>${esc(JSON.stringify(fhir, null, 2))}</pre></details>`;
+  box.hidden = false; head.setAttribute("aria-expanded", "true"); openMsg = id;
+}
+
+$("#detail").addEventListener("change", e => { if (e.target.id === "scenario") scenarioChoice = e.target.value; });
+$("#detail").addEventListener("input", e => { if (e.target.id === "qMessage") draftReply = e.target.value; });
+$("#detail").addEventListener("click", async e => {
+  const open = e.target.closest("[data-open]");
+  if (open) { expandMsg(Number(open.dataset.open)); return; }
+  if (e.target.id === "qSend") {
+    const msg = $("#qMessage").value.trim();
+    if (!msg) { toast("Write a reply before sending"); return; }
+    const files = [...($("#qFiles").files || [])];
+    const attachments = await Promise.all(files.map(f => new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res({ title: f.name, content_type: f.type || "application/pdf", data: String(r.result).split(",")[1] });
+      r.onerror = rej; r.readAsDataURL(f);
+    })));
+    e.target.disabled = true; e.target.textContent = "Sending…";
+    const r = await api(`/cases/${encodeURIComponent(selected)}/query-reply`, { method: "POST", body: JSON.stringify({ message: msg, attachments }) });
+    if (r.ok && r.body.exchange.status === "acked") { draftReply = ""; toast("Reply sent to the insurer"); }
+    else toast("Reply not delivered: " + ((r.body && (r.body.exchange?.error || r.body.detail)) || "unknown error"));
+    lastSig = ""; await Promise.all([renderDetail(), loadCases()]);
+    return;
+  }
+  if (e.target.id === "payBtn") {
+    e.target.disabled = true; e.target.textContent = "Paying…";
+    const r = await api(`/demo/cases/${encodeURIComponent(selected)}/pay`, { method: "POST" });
+    toast(r.ok ? "Insurer is sending the payment notice" : "Could not simulate payment");
+    setTimeout(() => { renderDetail(); loadCases(); }, 1500);
+    return;
+  }
+  const b = e.target.closest("button[data-submit]");
+  if (!b) return;
+  const wf = b.dataset.submit;
+  b.disabled = true; b.textContent = "Sending…";
+  const q = config.demo_mode ? `?scenario=${encodeURIComponent(scenarioChoice)}` : "";
+  const r = await api(`/cases/${encodeURIComponent(selected)}/submit/${wf}${q}`, { method: "POST" });
+  if (r.ok && r.body.exchange.status === "acked") toast(wf === "preauth" ? "Pre-auth sent to the insurer" : "Claim sent to the insurer");
+  else if (r.ok) toast("Not delivered: " + (r.body.exchange.error || "unknown error") + ". You can send it again.");
+  else toast((r.body && r.body.detail) || "Could not send. Try again.");
+  lastSig = "";
+  await Promise.all([renderDetail(), loadCases()]);
+});
+
+// ---------- new case form ----------
+const ROWS = {
+  dx: { cls: "dx", html: () => `<label>ICD-10 code<input data-k="icd10_code" placeholder="I46.9"></label><label>Description<input data-k="description"></label>` },
+  px: { cls: "px", html: () => `<label>SNOMED code<input data-k="snomed_code" inputmode="numeric"></label><label>Description<input data-k="description"></label>` },
+  li: { cls: "li", html: () => `<label>SNOMED code<input data-k="snomed_code" inputmode="numeric"></label><label>Service<input data-k="description"></label><label>Rate (₹)<input data-k="unit_price" type="number" min="0" step="0.01"></label><label>Qty<input data-k="quantity" type="number" min="1" value="1"></label>` },
+};
+
+function addRow(kind, values = {}) {
+  const row = document.createElement("div");
+  row.className = "row " + ROWS[kind].cls;
+  row.innerHTML = ROWS[kind].html() + `<button class="x" type="button" aria-label="Remove row">✕</button>`;
+  for (const [k, v] of Object.entries(values)) { const i = row.querySelector(`[data-k="${k}"]`); if (i) i.value = v; }
+  $("#" + kind + "Rows").appendChild(row);
+  updateTotal();
+}
+document.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => addRow(b.dataset.add)));
+$("#form").addEventListener("click", e => { if (e.target.matches(".x")) { e.target.parentElement.remove(); updateTotal(); } });
+$("#form").addEventListener("input", e => { if (e.target.closest("#liRows")) updateTotal(); });
+
+function updateTotal() {
+  let t = 0;
+  document.querySelectorAll("#liRows .row").forEach(r => {
+    t += (parseFloat(r.querySelector('[data-k="unit_price"]').value) || 0) * (parseInt(r.querySelector('[data-k="quantity"]').value) || 0);
+  });
+  $("#billTotal").textContent = "Total " + inr(t);
+}
+
+function rows(kind) {
+  return [...document.querySelectorAll(`#${kind}Rows .row`)].map(r => {
+    const o = {};
+    r.querySelectorAll("[data-k]").forEach(i => { if (i.value.trim() !== "") o[i.dataset.k] = i.value.trim(); });
+    if (o.quantity) o.quantity = parseInt(o.quantity);
+    return o;
+  }).filter(o => Object.keys(o).length);
+}
+
+function withOffset(local) {           // "2025-03-07T11:01" -> ISO with the browser's UTC offset
+  if (!local) return null;
+  const off = -new Date(local).getTimezoneOffset(), sign = off >= 0 ? "+" : "-";
+  const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0"), mm = String(Math.abs(off) % 60).padStart(2, "0");
+  return `${local.length === 16 ? local + ":00" : local}${sign}${hh}:${mm}`;
+}
+
+function collect() {
+  const data = {};
+  $("#form").querySelectorAll("[name]").forEach(i => {
+    const v = i.value.trim();
+    if (v === "") return;
+    const path = i.name.split(".");
+    let o = data;
+    while (path.length > 1) { const k = path.shift(); o = o[k] ??= {}; }
+    o[path[0]] = v;
+  });
+  data.case_id = "AETX-" + Date.now().toString(36).toUpperCase();
+  data.claim_type = "preauth";
+  data.created_at = new Date().toISOString();
+  for (const k of ["admission_at", "discharge_at"]) {
+    if (data[k]) data[k] = withOffset(data[k]); else delete data[k];   // empty -> "required" error
+  }
+  data.diagnoses = rows("dx");
+  data.procedures = rows("px");
+  data.line_items = rows("li");
+  return data;
+}
+
+const FRIENDLY = {
+  "icd10_code": "ICD-10 code", "snomed_code": "SNOMED code", "unit_price": "rate",
+  "nhcx_participant_code": "NHCX code", "birth_date": "date of birth", "abha_number": "ABHA number",
+  "admission_at": "Admission", "discharge_at": "Expected discharge",
+  "policy_number": "number", "product_code": "product code", "hfr_id": "HFR ID", "member_id": "member ID", "registration_number": "registration no.",
+  "patient": "Patient", "hospital": "Hospital", "insurer": "Insurer", "doctor": "Doctor", "policy": "Policy",
+  "diagnoses": "Diagnosis", "procedures": "Procedure", "line_items": "Bill line",
+};
+function explain(detail) {
+  if (!Array.isArray(detail)) return [String(detail)];
+  return detail.map(e => {
+    const loc = (e.loc || []).filter(x => x !== "body");
+    const where = loc.map(x => typeof x === "number" ? `#${x + 1}` : (FRIENDLY[x] || String(x).replaceAll("_", " "))).join(" ");
+    const msg = e.msg.replace(/^Value error, /, "").replace(/^Field required$/, "required")
+      .replace(/^String should match pattern .*/, "has the wrong format");
+    return `${where ? where + ": " : ""}${msg}`;
+  });
+}
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("#saveBtn"); btn.disabled = true;
+  const r = await api("/cases", { method: "POST", body: JSON.stringify(collect()) });
+  btn.disabled = false;
+  if (r.ok) {
+    $("#formErrors").hidden = true;
+    toast("Case saved");
+    await loadCases();
+    openCase(r.body.case_id);
+  } else {
+    const msgs = explain(r.body && r.body.detail);
+    $("#formErrors").innerHTML = `<strong>Fix these before saving:</strong><ul>${msgs.map(m => `<li>${esc(m)}</li>`).join("")}</ul>`;
+    $("#formErrors").hidden = false;
+    $("#formErrors").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+function openForm() {
+  selected = null; renderList();
+  $("#placeholder").hidden = true; $("#detail").hidden = true; $("#form").hidden = false;
+  $("#form").reset(); $("#formErrors").hidden = true;
+  ["dx", "px", "li"].forEach(k => ($("#" + k + "Rows").innerHTML = ""));
+  addRow("dx"); addRow("li");
+}
+$("#newBtn").addEventListener("click", openForm);
+$("#cancelBtn").addEventListener("click", () => { $("#form").hidden = true; $("#placeholder").hidden = false; });
+
+$("#sampleBtn").addEventListener("click", async () => {
+  const r = await api("/ui/sample");
+  if (!r.ok) return;
+  const s = r.body, f = $("#form");
+  const set = (name, v) => { const i = f.querySelector(`[name="${name}"]`); if (i && v != null) i.value = v; };
+  for (const grp of ["patient", "hospital", "insurer", "doctor", "policy"])
+    for (const [k, v] of Object.entries(s[grp])) set(`${grp}.${k}`, v);
+  set("hospital_reference", s.hospital_reference);
+  set("admission_at", s.admission_at.slice(0, 16));
+  set("discharge_at", s.discharge_at.slice(0, 16));
+  ["dx", "px", "li"].forEach(k => ($("#" + k + "Rows").innerHTML = ""));
+  s.diagnoses.forEach(x => addRow("dx", x));
+  s.procedures.forEach(x => addRow("px", x));
+  s.line_items.forEach(x => addRow("li", x));
+});
+
+// ---------- start ----------
+$("#demoBtn").addEventListener("click", async () => {
+  const r = await api("/demo/case", { method: "POST" });
+  if (!r.ok) { toast("Could not create a demo case"); return; }
+  await loadCases();
+  openCase(r.body.case_id);
+});
+
+(async () => {
+  const r = await api("/ui/config");
+  if (r.ok) config = r.body;
+  $("#demoTag").hidden = !config.demo_mode;
+  $("#demoBtn").hidden = !config.demo_mode;
+  loadCases();
+})();
+timer = setInterval(() => { loadCases(); if (selected && !$("#detail").hidden) renderDetail(true); }, 3000);
+</script>
+</body>
+</html>

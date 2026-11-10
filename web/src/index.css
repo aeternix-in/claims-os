@@ -1,0 +1,13 @@
+@import './theme.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-paper text-ink font-sans text-base antialiased; }
+.btn { @apply inline-flex items-center gap-2 rounded-md px-3 py-1.5 font-medium transition-colors disabled:opacity-50; }
+.btn-primary { @apply btn bg-accent text-white hover:bg-accent-hover; }
+.btn-ghost { @apply btn border border-line bg-surface hover:bg-surface-2; }
+.card { @apply rounded-lg border border-line bg-surface shadow-soft; }
+.input { @apply w-full rounded-md border border-line-strong bg-surface px-3 py-1.5 outline-none focus:border-accent; }
+.label { @apply mb-1 block text-[12px] font-medium uppercase tracking-wide text-ink-3; }
+.num { @apply font-mono tabular-nums; }

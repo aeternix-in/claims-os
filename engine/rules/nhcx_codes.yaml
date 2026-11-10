@@ -1,0 +1,27 @@
+# SNOMED CT codes NHCX needs on every bill line and procedure.
+# ONLY codes taken from a source are filled in. Everything else must be added by the clinical team
+# (or per line on the Bill tab) before a claim can go over NHCX. Do not guess codes.
+version: 2026.11.0
+source: NRCeS ClaimBundle-preauthorization-example-01 (ABDM FHIR IG v6.5.0), as used by aeternix-core
+reviewed_by: null
+
+# bill category -> SNOMED code used when a line has none of its own
+categories:
+  icu: {code: "309904001", display: "Intensive care unit", source: "NRCeS ClaimBundle example 01"}
+  room: null
+  ot: null
+  surgeon: null
+  anaesthesia: null
+  consult: null
+  procedure: null
+  investigations: null
+  pharmacy: null
+  consumables: null
+  implants: null
+  misc: null
+
+# procedure_id (clinical.yaml) -> SNOMED procedures sent on the Claim
+procedures:
+  ptca:
+    - {code: "77343006", display: "Angiography", source: "NRCeS ClaimBundle example 01"}
+    - {code: "418285008", display: "Angioplasty of blood vessel", source: "NRCeS ClaimBundle example 01"}

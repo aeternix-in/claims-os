@@ -1,0 +1,24 @@
+# Local NHCX loop: the engine talks to nhcx-mock, the mock calls the engine back.
+# docker compose -f docker-compose.nhcx.yml up   (needs engine/.env with SUPABASE_URL / DATABASE_URL)
+services:
+  engine:
+    build: {context: ., dockerfile: engine/Dockerfile}
+    env_file: engine/.env
+    environment:
+      NHCX_ENABLED: "true"
+      AETERNIX_NHCX_BASE_URL: http://nhcx-mock:8000
+      AETERNIX_DEMO_MODE: "true"            # never against a real gateway
+      AETERNIX_ENVELOPE_MODE: jwe
+      AETERNIX_KEYS_DIR: /keys
+    volumes: ["./dev-keys:/keys:ro"]
+    ports: ["8080:8080"]
+  nhcx-mock:
+    image: python:3.12-slim
+    working_dir: /mock
+    volumes: ["./nhcx/nhcx-mock:/mock", "./dev-keys:/keys:ro"]
+    command: sh -c "pip install -q -e . && uvicorn nhcx_mock.main:app --app-dir src --host 0.0.0.0 --port 8000"
+    environment:
+      NHCX_MOCK_CALLBACK_BASE_URL: http://engine:8080
+      NHCX_MOCK_ENVELOPE_MODE: jwe
+      NHCX_MOCK_KEYS_DIR: /keys
+    ports: ["8000:8000"]

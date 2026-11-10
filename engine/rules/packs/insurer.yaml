@@ -1,0 +1,56 @@
+# Private insurers and TPAs. Versioned; every rule cites its source.
+# A source marked "UNVERIFIED" must be checked before relying on it with a payer.
+pack: insurer
+version: 2026.11.1
+applies_to: [insurer, tpa]
+
+required_documents:
+  preauth:
+    - type: policy_card
+      label: Policy card or e-card
+      source: IRDAI Master Circular on Health Insurance Business 2024, cashless request (Annexure, pre-authorisation form)
+    - type: id_proof
+      label: Patient photo ID (Aadhaar, PAN, passport)
+      source: IRDAI Master Circular 2024, KYC of insured at cashless request
+    - type: admission_note
+      label: Admission note with history, findings and plan
+      source: IRDAI standard pre-authorisation form, Part C (treating doctor)
+    - type: investigation
+      label: At least one report supporting the provisional diagnosis
+      source: IRDAI standard pre-authorisation form, Part C (investigations)
+  discharge:
+    - type: discharge_summary
+      label: Discharge summary signed by the treating doctor
+      source: IRDAI Master Circular 2024, final authorisation within 3 hours of request
+    - type: bill
+      label: Final itemised bill
+      source: IRDAI Master Circular 2024, final authorisation
+  claim:
+    - type: discharge_summary
+      label: Discharge summary
+      source: IRDAI standard claim form, Part B, documents list
+    - type: bill
+      label: Final itemised bill with breakup
+      source: IRDAI standard claim form, Part B
+    - type: investigation
+      label: Investigation reports
+      source: IRDAI standard claim form, Part B
+    - type: policy_card
+      label: Policy card or e-card
+      source: IRDAI standard claim form, Part B
+    - type: id_proof
+      label: Patient photo ID
+      source: IRDAI standard claim form, Part B
+  claim_if_surgical:
+    - type: ot_notes
+      label: Operation / procedure notes
+      source: IRDAI standard claim form, Part B (OT notes where applicable)
+  claim_if_implants:
+    - type: implant_invoice
+      label: Implant invoice and sticker (batch / lot number)
+      source: IRDAI standard claim form, Part B (implant sticker and invoice)
+
+deadlines:
+  claim_file_days_after_discharge:
+    default: 15
+    source: IRDAI Master Circular 2024; hospital MoU sets the actual window (rulebook "claim_file_window_days")

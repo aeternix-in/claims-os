@@ -1,0 +1,37 @@
+[project]
+name = "aeternix-core"
+version = "0.1.0"
+description = "Aeternix provider-side core: internal claim model and NHCX FHIR transformation"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "sqlalchemy>=2.0",
+    "jwcrypto>=1.5",
+    "segno>=1.6.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "nhcx-mock",
+]
+
+[tool.uv.sources]
+# Expects the mock next to this project: ~/Aeternix/nhcx-mock
+nhcx-mock = { path = "../nhcx-mock", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aeternix_core"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]

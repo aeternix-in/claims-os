@@ -1,0 +1,55 @@
+# Government schemes (CGHS, PM-JAY, ECHS, DGEHS). Generic pack; per-scheme packs override later.
+pack: scheme
+version: 2026.11.1
+applies_to: [scheme]
+
+required_documents:
+  preauth:
+    - type: scheme_card
+      label: Beneficiary card (CGHS card / PM-JAY e-card / ECHS card)
+      source: UNVERIFIED - scheme guidelines; confirm against NHA TMS / CGHS circulars
+    - type: referral
+      label: Referral or permission letter
+      source: UNVERIFIED - CGHS / ECHS referral rules; PM-JAY does not need one for empanelled packages
+    - type: id_proof
+      label: Patient photo ID
+      source: UNVERIFIED - scheme beneficiary verification
+    - type: admission_note
+      label: Admission note with clinical findings
+      source: UNVERIFIED - NHA TMS pre-auth requirements
+    - type: investigation
+      label: Report supporting the package chosen
+      source: UNVERIFIED - NHA HBP mandatory documents per package
+  discharge:
+    - type: discharge_summary
+      label: Discharge summary
+      source: UNVERIFIED - NHA TMS discharge requirements
+    - type: bill
+      label: Final bill
+      source: UNVERIFIED - NHA TMS discharge requirements
+  claim:
+    - type: discharge_summary
+      label: Discharge summary
+      source: UNVERIFIED - NHA TMS claim submission
+    - type: bill
+      label: Final bill
+      source: UNVERIFIED - NHA TMS claim submission
+    - type: investigation
+      label: Investigation reports
+      source: UNVERIFIED - NHA HBP mandatory documents
+    - type: scheme_card
+      label: Beneficiary card
+      source: UNVERIFIED
+  claim_if_surgical:
+    - type: ot_notes
+      label: Operation notes
+      source: UNVERIFIED - NHA HBP mandatory documents for surgical packages
+  claim_if_implants:
+    - type: implant_invoice
+      label: Implant invoice and sticker
+      source: UNVERIFIED - NHA HBP implant documentation
+
+deadlines:
+  claim_file_days_after_discharge:
+    default: 30
+    source: UNVERIFIED - scheme-specific; CGHS and PM-JAY windows differ, set per payer in the rulebook

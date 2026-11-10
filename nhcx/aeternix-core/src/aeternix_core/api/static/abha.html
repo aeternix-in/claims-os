@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aeternix · ABHA desk</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+  :root {
+    --ink: #12343B; --ink-2: #4A6268; --paper: #F3F6F5; --surface: #FFFFFF; --line: #D5DEDC;
+    --teal: #0F766E; --teal-soft: #E3F1EF;
+    --ok: #1F7A4D; --ok-bg: #E4F3EA; --wait: #9A6212; --wait-bg: #FBF0DC; --bad: #B42318; --bad-bg: #FBE7E5;
+    --radius-s: 6px; --radius-m: 10px;
+    font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink); background: var(--paper);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-size: 15px; line-height: 1.5; background: var(--paper); }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  header.bar { display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: var(--ink); color: #fff; flex-wrap: wrap; }
+  header.bar h1 { font-size: 17px; font-weight: 600; margin: 0; }
+  header.bar .who { color: #A9C3C0; font-size: 14px; }
+  header.bar .spacer { flex: 1; }
+  header.bar a { color: #fff; font-size: 14px; }
+  nav.tabs { display: flex; gap: 4px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--line); overflow-x: auto; }
+  nav.tabs button { all: unset; cursor: pointer; padding: 12px 14px; font-weight: 600; color: var(--ink-2); border-bottom: 3px solid transparent; white-space: nowrap; }
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--teal); }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h2 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 0 0 20px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px 20px; margin-bottom: 16px; }
+  .panel h3 { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: #fff; font-size: 12px; }
+  .panel.done .step-n { background: var(--ok); }
+  .panel.locked { opacity: .55; pointer-events: none; }
+  label.f { display: block; font-size: 13px; color: var(--ink-2); margin: 10px 0 4px; font-weight: 600; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=password], input[type=tel], select { border: 1px solid var(--line); border-radius: var(--radius-s); padding: 9px 11px; background: #fff; min-width: 0; }
+  input.wide { flex: 1 1 260px; }
+  .btn { border: 1px solid transparent; border-radius: var(--radius-s); padding: 9px 15px; font-weight: 600; cursor: pointer; background: var(--teal); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.quiet { background: transparent; border-color: var(--line); color: var(--ink); }
+  .eye { border: 1px solid var(--line); background: #fff; border-radius: var(--radius-s); padding: 9px 11px; cursor: pointer; }
+  .consent { max-height: 180px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 12px; font-size: 14px; background: var(--paper); }
+  .msg { margin-top: 10px; padding: 8px 12px; border-radius: var(--radius-s); font-size: 14px; }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .msg.bad { background: var(--bad-bg); color: var(--bad); }
+  .msg.info { background: var(--teal-soft); color: var(--ink); }
+  .msg:empty { display: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; background: #fff; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .profile { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: start; }
+  .profile img { width: 96px; height: 116px; object-fit: cover; border-radius: var(--radius-s); background: var(--paper); }
+  dl.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 18px; margin: 0; }
+  dl.kv dt { color: var(--ink-2); font-size: 13px; }
+  dl.kv dd { margin: 0; font-weight: 600; word-break: break-word; }
+  .big { font-size: 24px; font-weight: 700; letter-spacing: .02em; }
+  .card-img { max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius-s); margin-top: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  .accounts { display: grid; gap: 8px; }
+  .account { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 10px 12px; }
+  .qr { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
+  #qrBox { background: #fff; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-s); }
+  .muted { color: var(--ink-2); font-size: 13px; }
+  .hidden { display: none !important; }
+  @media (max-width: 560px) { .profile, .qr { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>Aeternix</h1><span class="who">ABHA desk · ABDM Milestone 1</span>
+  <span class="spacer"></span><a href="/ui">← Insurance desk</a>
+</header>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="create" aria-selected="true">Create ABHA</button>
+  <button role="tab" data-tab="verify" aria-selected="false">Verify ABHA</button>
+  <button role="tab" data-tab="share" aria-selected="false">Scan &amp; Share</button>
+  <button role="tab" data-tab="patients" aria-selected="false">Patients</button>
+</nav>
+
+<main>
+<!-- ================= CREATE ================= -->
+<section id="tab-create">
+  <h2>Create ABHA with Aadhaar OTP</h2>
+  <p class="sub">The patient's ABHA is created by ABDM. Aadhaar and OTPs are encrypted before they leave this screen's server.</p>
+
+  <div class="panel" id="c1">
+    <h3><span class="step-n">1</span> Consent</h3>
+    <div class="row" style="margin-bottom:8px">
+      <span class="muted">Language:</span>
+      <button class="chip" data-lang="en" aria-pressed="true" type="button">English</button>
+      <button class="chip" data-lang="hi" aria-pressed="false" type="button">हिन्दी</button>
+    </div>
+    <div class="consent" id="consentText"></div>
+    <label class="row" style="margin-top:10px"><input type="checkbox" id="consentChk"> <span>I agree (patient has read or been read the above)</span></label>
+  </div>
+
+  <div class="panel locked" id="c2">
+    <h3><span class="step-n">2</span> Aadhaar number</h3>
+    <div class="row">
+      <input type="password" id="aadhaar" class="wide" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="12-digit Aadhaar number" aria-label="Aadhaar number">
+      <button class="eye" type="button" data-eye="aadhaar" aria-label="Show or hide Aadhaar">👁</button>
+      <button class="btn" id="c2send" type="button">Send OTP</button>
+    </div>
+    <div class="msg" id="c2msg"></div>
+  </div>
+
+  <div class="panel locked" id="c3">
+    <h3><span class="step-n">3</span> Aadhaar OTP and communication mobile</h3>
+    <label class="f" for="c3otp">OTP received on the Aadhaar-linked mobile</label>
+    <div class="row">
+      <input type="text" id="c3otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit OTP">
+      <button class="btn quiet" id="c3resend" type="button" disabled>Resend OTP</button>
+      <span class="muted" id="c3timer"></span>
+    </div>
+    <label class="f" for="c3mobile">Communication mobile number (for ABHA)</label>
+    <input type="tel" id="c3mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile">
+    <div class="row" style="margin-top:12px"><button class="btn" id="c3verify" type="button">Verify &amp; create ABHA</button></div>
+    <div class="msg" id="c3msg"></div>
+  </div>
+
+  <div class="panel locked hidden" id="c4">
+    <h3><span class="step-n">4</span> Verify communication mobile</h3>
+    <p class="muted" style="margin:0 0 8px">This mobile is different from the Aadhaar-linked one, so it needs its own OTP.</p>
+    <div class="row">
+      <button class="btn quiet" id="c4send" type="button">Send OTP to mobile</button>
+      <input type="text" id="c4otp" inputmode="numeric" maxlength="6" placeholder="6-digit OTP">
+      <button class="btn" id="c4verify" type="button">Verify mobile</button>
+      <button class="btn quiet" id="c4resend" type="button" disabled>Resend</button>
+      <span class="muted" id="c4timer"></span>
+    </div>
+    <div class="msg" id="c4msg"></div>
+  </div>
+
+  <div class="panel locked" id="c5">
+    <h3><span class="step-n">5</span> ABHA address</h3>
+    <p class="muted" style="margin:0">Pick a suggestion or type your own (letters, numbers, . or _). <b>@sbx</b> is added.</p>
+    <div class="chips" id="c5chips"></div>
+    <div class="row">
+      <input type="text" id="c5addr" class="wide" placeholder="e.g. meera.iyer1990" autocomplete="off">
+      <button class="btn" id="c5set" type="button">Create ABHA address</button>
+      <button class="btn quiet" id="c5skip" type="button">Keep current</button>
+    </div>
+    <div class="msg" id="c5msg"></div>
+  </div>
+
+  <div id="cResult"></div>
+</section>
+
+<!-- ================= VERIFY ================= -->
+<section id="tab-verify" class="hidden">
+  <h2>Verify an existing ABHA</h2>
+  <p class="sub">For patients who already have an ABHA. Verification also finds or creates their hospital patient ID.</p>
+  <div class="panel">
+    <h3>How will the patient verify?</h3>
+    <label class="f" for="vMethod">Identify by</label>
+    <select id="vMethod">
+      <option value="abha-number">ABHA number (14 digits)</option>
+      <option value="abha-address">ABHA address (name@sbx)</option>
+      <option value="mobile-otp">Mobile number (find ABHA)</option>
+      <option value="aadhaar-otp">Aadhaar number (find ABHA)</option>
+    </select>
+    <div id="vChannelBox">
+      <label class="f">OTP goes to</label>
+      <div class="row">
+        <label class="row"><input type="radio" name="vChannel" value="aadhaar-otp" checked> Aadhaar-linked mobile</label>
+        <label class="row"><input type="radio" name="vChannel" value="mobile-otp"> ABHA-linked mobile</label>
+      </div>
+    </div>
+    <label class="f" for="vValue" id="vValueLabel">ABHA number</label>
+    <div class="row">
+      <input type="text" id="vValue" class="wide" autocomplete="off">
+      <button class="eye hidden" type="button" data-eye="vValue" id="vEye" aria-label="Show or hide">👁</button>
+      <button class="btn" id="vSend" type="button">Send OTP</button>
+    </div>
+    <div class="msg" id="vMsg1"></div>
+  </div>
+  <div class="panel locked" id="v2">
+    <h3>Enter OTP</h3>
+    <div class="row">
+      <input type="text" id="vOtp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit OTP">
+      <button class="btn" id="vVerify" type="button">Verify</button>
+      <button class="btn quiet" id="vResend" type="button" disabled>Resend OTP</button>
+      <span class="muted" id="vTimer"></span>
+    </div>
+    <div class="msg" id="vMsg2"></div>
+    <div class="accounts" id="vAccounts" style="margin-top:12px"></div>
+  </div>
+  <div id="vResult"></div>
+</section>
+
+<!-- ================= SCAN & SHARE ================= -->
+<section id="tab-share" class="hidden">
+  <h2>Scan &amp; Share registration</h2>
+  <p class="sub">Patients scan this counter QR in the ABHA app and tap Share. Their profile arrives here and the app shows an OPD token.</p>
+  <div class="panel">
+    <div class="qr">
+      <div id="qrBox"></div>
+      <div>
+        <div class="muted">Facility (HIP ID)</div><div id="hipId" style="font-weight:600"></div>
+        <div class="muted" style="margin-top:6px">Counter</div><div id="counterId" style="font-weight:600"></div>
+        <div class="muted" style="margin-top:6px;word-break:break-all" id="qrUrl"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Recent registrations <span class="muted" style="font-weight:400">(refreshes every 5 s)</span></h3>
+    <table><thead><tr><th>Token</th><th>Name</th><th>ABHA address</th><th>Patient ID</th><th>Sent to app</th><th>Time</th></tr></thead>
+      <tbody id="shareRows"><tr><td colspan="6" class="muted">None yet.</td></tr></tbody></table>
+  </div>
+</section>
+
+<!-- ================= PATIENTS ================= -->
+<section id="tab-patients" class="hidden">
+  <h2>Patients</h2>
+  <p class="sub">One ABHA number belongs to exactly one patient ID. Verifying or sharing again reuses the same record.</p>
+  <div class="panel">
+    <table><thead><tr><th>Patient ID</th><th>Name</th><th>ABHA number</th><th>ABHA address</th><th>Source</th><th>Updated</th></tr></thead>
+      <tbody id="patientRows"></tbody></table>
+  </div>
+</section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let CFG = {};
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `Request failed (${r.status})`);
+  return data;
+}
+function say(el, text, kind = "info") { el.className = "msg " + kind; el.textContent = text || ""; }
+function unlock(id, on = true) { $(id).classList.toggle("locked", !on); }
+function done(id) { $(id).classList.add("done"); }
+async function busy(btn, fn) { btn.disabled = true; try { return await fn(); } finally { btn.disabled = false; } }
+
+// ---- tabs
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + b.dataset.tab));
+  if (b.dataset.tab === "patients") loadPatients();
+  if (b.dataset.tab === "share") loadShares();
+});
+
+// ---- show/hide for masked inputs
+document.querySelectorAll("[data-eye]").forEach(b => b.onclick = () => {
+  const i = $(b.dataset.eye); i.type = i.type === "password" ? "text" : "password";
+});
+
+// ---- Verhoeff (same check the server does)
+const VD=[[0,1,2,3,4,5,6,7,8,9],[1,2,3,4,0,6,7,8,9,5],[2,3,4,0,1,7,8,9,5,6],[3,4,0,1,2,8,9,5,6,7],[4,0,1,2,3,9,5,6,7,8],[5,9,8,7,6,0,4,3,2,1],[6,5,9,8,7,1,0,4,3,2],[7,6,5,9,8,2,1,0,4,3],[8,7,6,5,9,3,2,1,0,4],[9,8,7,6,5,4,3,2,1,0]];
+const VP=[[0,1,2,3,4,5,6,7,8,9],[1,5,7,6,2,8,3,0,9,4],[5,8,0,3,7,9,6,1,4,2],[8,9,1,6,0,4,3,5,2,7],[9,4,5,3,1,2,6,8,7,0],[4,2,8,6,5,7,3,9,0,1],[2,7,9,3,8,0,6,4,1,5],[7,0,4,6,9,1,3,2,5,8]];
+function aadhaarError(v) {
+  v = v.replace(/\s|-/g, "");
+  if (!/^\d{12}$/.test(v)) return "Aadhaar number must be 12 digits.";
+  let c = 0; [...v].reverse().forEach((d, i) => c = VD[c][VP[i % 8][+d]]);
+  if (c !== 0 || /^[01]/.test(v)) return "Aadhaar number is not valid. Please check and re-enter.";
+  return null;
+}
+const mobileError = v => /^[6-9]\d{9}$/.test(v.replace(/\s/g, "")) ? null : "Please enter a valid mobile number.";
+const otpError = v => /^\d{6}$/.test(v.trim()) ? null : "OTP must be 6 digits.";
+
+// ---- resend timer: max 2 resends, each after 60 s
+function resendTimer(btn, label, resendsLeft) {
+  clearInterval(btn._t); btn.disabled = true;
+  if (resendsLeft <= 0) { label.textContent = "No more resends."; return; }
+  let left = CFG.resend_after_seconds || 60;
+  label.textContent = `Resend in ${left}s`;
+  btn._t = setInterval(() => {
+    left -= 1;
+    if (left <= 0) { clearInterval(btn._t); btn.disabled = false; label.textContent = `${resendsLeft} resend(s) left`; }
+    else label.textContent = `Resend in ${left}s`;
+  }, 1000);
+}
+
+// ---- profile + card block
+function profileHtml(p, patient, sid, heading) {
+  const photo = p.photo ? `<img alt="Photo" src="data:image/jpeg;base64,${p.photo}">` : `<img alt="">`;
+  return `<div class="panel done">
+    <h3><span class="step-n">✓</span> ${esc(heading)}</h3>
+    <div class="profile">${photo}<div>
+      <div class="muted">ABHA number</div><div class="big">${esc(p.abhaNumber || "—")}</div>
+      <div class="muted" style="margin-top:4px">ABHA address</div><div style="font-weight:600;font-size:18px">${esc(p.abhaAddress || "—")}</div>
+    </div></div>
+    <dl class="kv" style="margin-top:14px">
+      <div><dt>Name</dt><dd>${esc(p.name)}</dd></div><div><dt>Gender</dt><dd>${esc(p.gender)}</dd></div>
+      <div><dt>Date of birth</dt><dd>${esc(p.dob)}</dd></div><div><dt>Mobile</dt><dd>${esc(p.mobile || "—")}</dd></div>
+      <div><dt>Address</dt><dd>${esc([p.address, p.district, p.state, p.pincode].filter(Boolean).join(", ") || "—")}</dd></div>
+      <div><dt>Hospital patient ID</dt><dd>${esc(patient?.patient_id || "—")} ${patient?.existing ? '<span class="muted">(existing record reused)</span>' : patient ? '<span class="muted">(new)</span>' : ""}</dd></div>
+    </dl>
+    ${sid ? `<div class="row" style="margin-top:14px">
+      <button class="btn" type="button" data-card="${esc(sid)}">View ABHA card</button>
+      <a class="btn quiet" href="/abha/card?sid=${encodeURIComponent(sid)}&download=true" style="text-decoration:none">Download ABHA card</a>
+    </div><div class="msg" data-cardmsg></div><div data-cardbox></div>` : ""}
+  </div>`;
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-card]"); if (!b) return;
+  const panel = b.closest(".panel"), box = panel.querySelector("[data-cardbox]"), msg = panel.querySelector("[data-cardmsg]");
+  await busy(b, async () => {
+    const r = await fetch(`/abha/card?sid=${encodeURIComponent(b.dataset.card)}`);
+    if (!r.ok) { const d = await r.json().catch(() => ({})); return say(msg, d.detail || "Could not load the card.", "bad"); }
+    const blob = await r.blob(), url = URL.createObjectURL(blob);
+    box.innerHTML = blob.type.includes("pdf") ? `<iframe src="${url}" style="width:100%;height:480px;border:0"></iframe>` : `<img class="card-img" alt="ABHA card" src="${url}">`;
+    say(msg, "");
+  }).catch(err => say(msg, err.message, "bad"));
+});
+
+// ================= CREATE =================
+const C = { txn: null, sid: null, lastOtpTxn: null, mobileTxn: null, profile: null, patient: null };
+function setLang(l) {
+  document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  $("consentText").textContent = (CFG.consent || {})[l] || "";
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => setLang(b.dataset.lang));
+$("consentChk").onchange = () => unlock("c2", $("consentChk").checked);
+
+async function sendAadhaarOtp(resend) {
+  const err = aadhaarError($("aadhaar").value);
+  if (err) return say($("c2msg"), err, "bad");
+  const r = await api("/abha/enrol/otp", { method: "POST", body: { aadhaar: $("aadhaar").value, previous_txn: resend ? C.lastOtpTxn : null } });
+  C.txn = C.lastOtpTxn = r.txnId;
+  say(resend ? $("c3msg") : $("c2msg"), r.message || "OTP sent.", "ok");
+  done("c2"); unlock("c3"); resendTimer($("c3resend"), $("c3timer"), r.resendsLeft); $("c3otp").focus();
+}
+$("c2send").onclick = () => busy($("c2send"), () => sendAadhaarOtp(false)).catch(e => say($("c2msg"), e.message, "bad"));
+$("c3resend").onclick = () => busy($("c3resend"), () => sendAadhaarOtp(true)).catch(e => say($("c3msg"), e.message, "bad"));
+
+$("c3verify").onclick = () => busy($("c3verify"), async () => {
+  const e1 = otpError($("c3otp").value) || mobileError($("c3mobile").value);
+  if (e1) return say($("c3msg"), e1, "bad");
+  const r = await api("/abha/enrol/verify", { method: "POST", body: { txnId: C.txn, otp: $("c3otp").value, mobile: $("c3mobile").value, consent: $("consentChk").checked } });
+  C.txn = r.txnId; C.sid = r.sid; C.profile = r.profile; C.patient = r.patient;
+  $("aadhaar").value = ""; clearInterval($("c3resend")._t); $("c3timer").textContent = ""; $("c3resend").disabled = true;
+  done("c3");
+  if (!r.isNew) {
+    say($("c3msg"), "An ABHA already exists for this Aadhaar. Showing the existing profile.", "info");
+    $("cResult").innerHTML = profileHtml(r.profile, r.patient, r.sid, "Existing ABHA (view profile)");
+    return;
+  }
+  say($("c3msg"), r.message || "ABHA created.", "ok");
+  if (!r.mobileVerified) { $("c4").classList.remove("hidden"); unlock("c4"); }
+  else await loadSuggestions();
+}).catch(e => say($("c3msg"), e.message, "bad"));
+
+async function sendMobileOtp(resend) {
+  const r = await api("/abha/enrol/mobile/otp", { method: "POST", body: { txnId: C.txn, mobile: $("c3mobile").value } });
+  C.mobileTxn = r.txnId; say($("c4msg"), r.message || "OTP sent.", "ok");
+  C.mobileResends = resend ? (C.mobileResends ?? 2) - 1 : 2;
+  resendTimer($("c4resend"), $("c4timer"), C.mobileResends);
+}
+$("c4send").onclick = () => busy($("c4send"), () => sendMobileOtp(false)).catch(e => say($("c4msg"), e.message, "bad"));
+$("c4resend").onclick = () => busy($("c4resend"), () => sendMobileOtp(true)).catch(e => say($("c4msg"), e.message, "bad"));
+$("c4verify").onclick = () => busy($("c4verify"), async () => {
+  const e1 = otpError($("c4otp").value); if (e1) return say($("c4msg"), e1, "bad");
+  const r = await api("/abha/enrol/mobile/verify", { method: "POST", body: { txnId: C.mobileTxn || C.txn, otp: $("c4otp").value } });
+  C.txn = r.txnId; say($("c4msg"), r.message || "Mobile verified.", "ok"); done("c4");
+  clearInterval($("c4resend")._t); $("c4timer").textContent = "";
+  await loadSuggestions();
+}).catch(e => say($("c4msg"), e.message, "bad"));
+
+async function loadSuggestions() {
+  unlock("c5");
+  try {
+    const r = await api(`/abha/enrol/suggestions?txnId=${encodeURIComponent(C.txn)}`);
+    C.txn = r.txnId || C.txn;
+    $("c5chips").innerHTML = (r.suggestions || []).map(s => `<button type="button" class="chip" data-s="${esc(s)}" aria-pressed="false">${esc(s)}@sbx</button>`).join("") || '<span class="muted">No suggestions; type one.</span>';
+    $("c5chips").querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+      $("c5chips").querySelectorAll("[data-s]").forEach(x => x.setAttribute("aria-pressed", x === b));
+      $("c5addr").value = b.dataset.s;
+    });
+  } catch (e) { say($("c5msg"), e.message, "bad"); }
+}
+async function showCreated(heading) {
+  done("c5");
+  let p = C.profile, patient = C.patient;
+  if (C.sid) { try { const r = await api(`/abha/profile?sid=${encodeURIComponent(C.sid)}`); p = { ...C.profile, ...Object.fromEntries(Object.entries(r.profile).filter(([, x]) => x)) }; patient = C.patient || r.patient; } catch (e) {} }
+  $("cResult").innerHTML = profileHtml(p, patient, C.sid, heading);
+  $("cResult").scrollIntoView({ behavior: "smooth" });
+}
+$("c5set").onclick = () => busy($("c5set"), async () => {
+  const a = $("c5addr").value.trim(); if (!a) return say($("c5msg"), "Choose or type an ABHA address.", "bad");
+  const r = await api("/abha/enrol/address", { method: "POST", body: { txnId: C.txn, abhaAddress: a } });
+  C.profile = { ...C.profile, abhaAddress: r.abhaAddress };
+  say($("c5msg"), `ABHA address ${r.abhaAddress} created.`, "ok");
+  await showCreated("ABHA created");
+}).catch(e => say($("c5msg"), e.message, "bad"));
+$("c5skip").onclick = () => showCreated("ABHA created");
+
+// ================= VERIFY =================
+const V = { txn: null, method: null, sid: null, value: null };
+function vMethod() {
+  const m = $("vMethod").value, ch = document.querySelector("[name=vChannel]:checked").value;
+  if (m === "abha-number") return ch === "aadhaar-otp" ? "abha-number-aadhaar-otp" : "abha-number-mobile-otp";
+  if (m === "abha-address") return ch === "aadhaar-otp" ? "abha-address-aadhaar-otp" : "abha-address-mobile-otp";
+  return m;
+}
+$("vMethod").onchange = () => {
+  const m = $("vMethod").value;
+  $("vChannelBox").classList.toggle("hidden", !m.startsWith("abha"));
+  $("vValueLabel").textContent = { "abha-number": "ABHA number", "abha-address": "ABHA address", "mobile-otp": "Mobile number", "aadhaar-otp": "Aadhaar number" }[m];
+  $("vValue").type = m === "aadhaar-otp" ? "password" : "text";
+  $("vEye").classList.toggle("hidden", m !== "aadhaar-otp");
+  $("vValue").value = ""; say($("vMsg1"), "");
+};
+function vInputError(m, val) {
+  if (m.startsWith("abha-number")) return /^\d{14}$/.test(val.replace(/\D/g, "")) ? null : "ABHA number must be 14 digits.";
+  if (m.startsWith("abha-address")) return val.trim().length >= 4 ? null : "Enter the ABHA address.";
+  if (m === "mobile-otp") return mobileError(val);
+  return aadhaarError(val);
+}
+async function vSend(resend) {
+  const m = resend ? V.method : vMethod(), val = resend ? V.value : $("vValue").value;
+  const err = vInputError(m, val); if (err) return say($("vMsg1"), err, "bad");
+  const r = await api("/abha/login/otp", { method: "POST", body: { method: m, value: val, previous_txn: resend ? V.txn : null } });
+  V.txn = r.txnId; V.method = m; V.value = val;
+  say(resend ? $("vMsg2") : $("vMsg1"), (r.name ? `${r.name}: ` : "") + (r.message || "OTP sent."), "ok");
+  unlock("v2"); $("vAccounts").innerHTML = ""; $("vResult").innerHTML = "";
+  resendTimer($("vResend"), $("vTimer"), r.resendsLeft); $("vOtp").focus();
+}
+$("vSend").onclick = () => busy($("vSend"), () => vSend(false)).catch(e => say($("vMsg1"), e.message, "bad"));
+$("vResend").onclick = () => busy($("vResend"), () => vSend(true)).catch(e => say($("vMsg2"), e.message, "bad"));
+
+async function vShowProfile(sid) {
+  const r = await api(`/abha/profile?sid=${encodeURIComponent(sid)}`);
+  $("vResult").innerHTML = profileHtml(r.profile, r.patient, sid, "ABHA verified");
+}
+$("vVerify").onclick = () => busy($("vVerify"), async () => {
+  const e1 = otpError($("vOtp").value); if (e1) return say($("vMsg2"), e1, "bad");
+  const r = await api("/abha/login/verify", { method: "POST", body: { txnId: V.txn, otp: $("vOtp").value, method: V.method } });
+  clearInterval($("vResend")._t); $("vTimer").textContent = ""; $("vResend").disabled = true; $("vOtp").value = "";
+  if (r.noAbha) {
+    say($("vMsg2"), r.message, "info");
+    $("vAccounts").innerHTML = `<div class="row"><button class="btn" type="button" id="goCreate">Create a new ABHA</button></div>`;
+    $("goCreate").onclick = () => document.querySelector('[data-tab="create"]').click();
+    return;
+  }
+  say($("vMsg2"), r.message || "OTP verified.", "ok");
+  if (r.needsSelection) {
+    $("vAccounts").innerHTML = `<div class="muted">This mobile is linked to ${r.accounts.length} ABHAs. Choose the patient:</div>` +
+      r.accounts.map(a => `<div class="account"><div><b>${esc(a.name)}</b> <span class="muted">${esc(a.gender || "")} ${esc(a.dob || "")}</span><br>${esc(a.abhaNumber)} · ${esc(a.abhaAddress || "")}</div>
+        <button class="btn" type="button" data-pick="${esc(a.abhaNumber)}" ${a.status && a.status !== "ACTIVE" ? "disabled title='Not active'" : ""}>Select</button></div>`).join("");
+    $("vAccounts").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => busy(b, async () => {
+      const s = await api("/abha/login/select", { method: "POST", body: { sid: r.sid, abhaNumber: b.dataset.pick } });
+      $("vAccounts").innerHTML = ""; await vShowProfile(s.sid);
+    }).catch(e => say($("vMsg2"), e.message, "bad")));
+    return;
+  }
+  await vShowProfile(r.sid);
+}).catch(e => say($("vMsg2"), e.message, "bad"));
+
+// ================= SCAN & SHARE =================
+function drawQr() {
+  $("hipId").textContent = CFG.hip_id || "Not set (AETERNIX_HIP_ID)";
+  $("counterId").textContent = CFG.counter_id || "";
+  $("qrUrl").textContent = CFG.qr_url || "Set AETERNIX_HIP_ID in .env once the facility is registered and linked to the bridge.";
+  if (CFG.qr_url) $("qrBox").innerHTML = `<img src="/abha/qr.svg" alt="Counter QR code" width="180" height="180"><div class="row" style="margin-top:6px"><a href="/abha/qr.svg" download="aeternix-counter-qr.svg" class="muted">Download to print</a></div>`;
+  else $("qrBox").innerHTML = '<div class="muted" style="width:180px">QR appears when the HIP ID is set.</div>';
+}
+async function loadShares() {
+  try {
+    const rows = await api("/abha/shares");
+    $("shareRows").innerHTML = rows.length ? rows.map(r => `<tr><td class="big" style="font-size:18px">${esc(r.token_number)}</td><td>${esc(r.name)}</td><td>${esc(r.abha_address)}</td>
+      <td>${esc(r.patient_id || "—")}</td><td>${r.status === "acknowledged" ? "✓ yes" : r.status === "ack_failed" ? `<span style="color:var(--bad)" title="${esc(r.error)}">failed</span>` : "sending…"}</td>
+      <td>${esc(new Date(r.created_at).toLocaleTimeString())}</td></tr>`).join("") : '<tr><td colspan="6" class="muted">None yet.</td></tr>';
+  } catch (e) {}
+}
+setInterval(() => { if (!$("tab-share").classList.contains("hidden")) loadShares(); }, 5000);
+
+// ================= PATIENTS =================
+async function loadPatients() {
+  const rows = await api("/abha/patients").catch(() => []);
+  $("patientRows").innerHTML = rows.length ? rows.map(r => `<tr><td><b>${esc(r.patient_id)}</b></td><td>${esc(r.name)}</td><td>${esc(r.abha_number)}</td><td>${esc(r.abha_address)}</td><td>${esc(r.source)}</td><td>${esc(new Date(r.updated_at).toLocaleString())}</td></tr>`).join("")
+    : '<tr><td colspan="6" class="muted">No patients yet.</td></tr>';
+}
+
+(async () => { CFG = await api("/abha/config").catch(() => ({})); setLang("en"); drawQr(); })();
+</script>
+</body>
+</html>
