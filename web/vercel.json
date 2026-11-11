@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/live", "destination": "/", "permanent": true },
+    { "source": "/live/:path*", "destination": "/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/demo", "destination": "/demo/index.html" },
+    { "source": "/demo/:path*", "destination": "/demo/index.html" },
+    { "source": "/classic", "destination": "/classic/index.html" },
+    { "source": "/classic/:path*", "destination": "/classic/index.html" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}
