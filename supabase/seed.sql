@@ -11,4 +11,4 @@ with h as (
 )
 insert into profiles (user_id, hospital_id, full_name, role)
 select u.id, h.id, 'Desk Lead', 'desk' from auth.users u, h
-where u.email = 'contact@aeternix.in';
+where u.email = 'CHANGE-ME@example.com';

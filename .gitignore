@@ -10,3 +10,7 @@ engine/.storage/
 *.pem
 *.db
 *.sqlite
+
+*env*.txt
+.env*
+!.env.example

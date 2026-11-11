@@ -14,6 +14,8 @@ from .nhcx import router as nhcx_router
 from .querydesk import router as queries_router
 from .reports import router as reports_router
 from .setup import router as setup_router
+from .ui_store import router as ui_router
+from .ui_files import router as ui_files_router
 from .config import get_settings
 
 app = FastAPI(title="Aeternix Claims Engine", version="0.1.0")
@@ -30,6 +32,8 @@ app.include_router(bank_router)
 app.include_router(reports_router)
 app.include_router(nhcx_router)
 app.include_router(setup_router)
+app.include_router(ui_router)
+app.include_router(ui_files_router)
 app.include_router(nhcx_gateway)
 
 

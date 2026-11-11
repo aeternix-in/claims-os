@@ -51,5 +51,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><BrowserRouter><SessionProvider><App /></SessionProvider></BrowserRouter></React.StrictMode>,
+  <React.StrictMode><BrowserRouter basename="/classic"><SessionProvider><App /></SessionProvider></BrowserRouter></React.StrictMode>,
 );

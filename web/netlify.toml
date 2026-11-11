@@ -3,6 +3,24 @@
   command = "npm run build"
   publish = "dist"
 
+# /demo/  the CTO's demo with sample data (for investors; nothing is saved to the server)
+# /classic/  the earlier screens
+# /  the product (the CTO's UI on the hospital's real data)
+[[redirects]]
+  from = "/demo/*"
+  to = "/demo/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/classic/*"
+  to = "/classic/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/live/*"
+  to = "/"
+  status = 301
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

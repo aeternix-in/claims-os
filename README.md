@@ -74,7 +74,7 @@ uv pip install -e nhcx/aeternix-core -e nhcx/nhcx-mock
 ### 3. Supabase (once per project)
 1. Create a project. **Region: Mumbai (ap-south-1)** for anything beyond demo data (see
    [Before real patients](#before-real-patients)). Keep RLS and the Data API **on**.
-2. **SQL editor:** run each file in `supabase/migrations/` **once, in order**: `0001` → `0006`.
+2. **SQL editor:** run each file in `supabase/migrations/` **once, in order**: `0001` → `0008`.
 3. **Authentication → Users → Add user** (tick *Auto confirm*). Create at least `owner` and `desk` users.
 4. Run `supabase/seed.sql` once, with `CHANGE-ME@example.com` replaced by one user's email. This creates the hospital,
    7 payers and that user's profile.
@@ -136,7 +136,7 @@ uvicorn app.main:app --port 8080 --reload
 # 3. Web app
 cd web && npm install && npm run dev        # later runs: just npm run dev
 ```
-Open **http://localhost:5173**. API docs: engine at http://localhost:8080/docs, mock at http://localhost:8000/docs.
+Open **http://localhost:5173** (the product), **http://localhost:5173/demo/** (investor demo, sample data). API docs: engine at http://localhost:8080/docs, mock at http://localhost:8000/docs.
 
 **Both NHCX terminals must use the same envelope mode** (`jwe` in both, or `plain` in both).
 
@@ -210,6 +210,48 @@ About 20 minutes. Note anything odd with a screenshot (see [Reporting a problem]
 13. **Leakage** and **Reports:** check the numbers make sense against what you entered. Download the CSVs.
 
 ---
+
+## The CTO's UI: product and investor demo
+
+One build serves:
+
+| Address | What it is |
+|---|---|
+| `/` | **The product.** The CTO's UI on the hospital's real data: sign in, every change saved to Supabase through the engine, shared between users (others' changes appear within 5 s). Real time only, real role from the profile. |
+| `/demo/` | **Investor demo.** The CTO's approved demo, exactly (pixel-identical, checked). Sample hospital, simulated payers, fast-forward clock. Runs only in the visitor's browser; it never talks to the engine or Supabase, so it cannot touch real data. |
+| `/classic/` | The earlier engine-first screens (kept for reference). |
+| `/live/` | Old address; forwards to `/`. |
+
+The UI source is `web/src/demo-ui/app.js` (de-minified from the approved build). Screens are unchanged; every
+change is marked `Aeternix:` and switched on only in the product (`LIVE`).
+
+**What the product does that the demo simulates**
+
+- **Payer replies are recorded, not simulated.** Wherever the demo says "Skip to the payer's reply", the product
+  says **Record the payer's reply** and opens a form for what actually came in: pre-auth approved / partly / query /
+  denied; enhancement; final approval (the payer's figure; standard deductions are worked out from the bill and the
+  policy and anything else is recorded as an extra cut, flagged unexplained if no reason was given); settlement
+  letter / query / rejection; query reply accepted; money credited (amount, UTR, date); dispute outcome. The claim
+  then moves exactly as the demo's own payer logic moves it. "Expected by" times are only reminders.
+- **The hospital's own lists.** Setup → Payers, TPAs, Doctors, Procedures. Every dropdown and screen uses them.
+  A new payer starts with the rules of a similar payer (edit them on Payers); a new procedure starts from the
+  first procedure's charges (edit on Tariffs). Anything used on a claim cannot be removed.
+- **Documents.** Upload on a claim's Documents tab stores the file privately (Supabase Storage, or
+  `engine/.storage` locally when no service key is set), reads the text (PDF text, OCR for scans) and shows the
+  key fields found. View opens the stored file. Remove keeps the file and marks it removed.
+- **Bank statement import** (Bank match → Import a statement, CSV) saves the credits for matching.
+- **Roles are enforced by the engine:** a doctor cannot change hospital details, payers, rules, tariff,
+  doctors, procedures or bank credits. Theme is per device.
+- **No data loss on close:** a change waiting to be sent is sent when the tab is hidden; closing with an unsent
+  change asks first.
+- **PDFs:** the UI's Print buttons (letters, realisation report, summaries) print or save as PDF from the browser.
+
+Storage: migrations `0007_ui_store.sql` (claims, hospital record, append-only audit log) and `0008_ui_files.sql`
+(uploaded files); engine `app/ui_store.py` and `app/ui_files.py`.
+
+**Not yet in the product:** sending pre-auths and claims over NHCX from these screens (the NHCX module works on
+the engine's own case model, used by `/classic/`; bridging it to the product's claims is the next step), and
+adding users from the UI (use `seed` / the Supabase dashboard as in "Users and roles").
 
 ## NHCX
 
@@ -327,7 +369,7 @@ import and matching · leakage L1–L7, payer scorecards, owner's pack, CSV expo
 setup, payers, roles, live updates.
 
 **Open:**
-- Screens still placeholders: Tariffs, Network, Leakage check.
+- Product (`/`): NHCX sending from the claim screens; adding users from the UI.
 - Letter sweep and owner digest run by button; to be scheduled.
 - NHCX: real sandbox not yet connected; Get Policy, enhancement (13), timeout follow-up not built.
 - ABHA desk (ABDM M1) stays in aeternix-core.

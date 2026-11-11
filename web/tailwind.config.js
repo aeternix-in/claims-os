@@ -1,7 +1,7 @@
 /** Theme tokens copied from the CTO's demo (src/theme.css). */
 const v = (n) => `var(--${n})`;
 export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/app/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {

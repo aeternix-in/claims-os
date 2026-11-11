@@ -4,5 +4,5 @@
     "moduleResolution": "bundler", "jsx": "react-jsx", "strict": true, "noEmit": true,
     "skipLibCheck": true, "isolatedModules": true, "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src/app"]
 }
